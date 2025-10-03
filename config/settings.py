@@ -10,7 +10,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "integration_utils.bitrix24",
     "deals",
 ]
 
@@ -90,3 +91,18 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+X_FRAME_OPTIONS = 'ALLOWALL'
+
+from integration_utils.bitrix24.local_settings_class import LocalSettingsClass
+
+APP_SETTINGS = LocalSettingsClass(
+    portal_domain=os.getenv('DOMAIN'),
+    app_domain=os.getenv('NGROK_URL'),
+    app_name='deal_management',
+    salt=os.getenv('SECRET_KEY'),
+    secret_key=os.getenv('SECRET_KEY'),
+    application_bitrix_client_id=os.getenv('CLIENT_ID'),
+    application_bitrix_client_secret=os.getenv('CLIENT_SECRET'),
+    application_index_path='/',
+)
