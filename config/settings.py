@@ -23,7 +23,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "integration_utils.bitrix24",
-    "deals",
+    "apps.deals",
 ]
 
 MIDDLEWARE = [
