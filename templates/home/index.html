@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Bitrix24 Apps - Выбор приложения{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Bitrix24 Apps</h1>
+    <p class="user-info">Выберите приложение для работы</p>
+</div>
+
+<div class="apps-grid">
+    {% for app in apps %}
+    <a href="{{ app.url }}" class="app-card" style="border-left: 4px solid {{ app.color }}">
+        <div class="app-icon">{{ app.icon }}</div>
+        <h2>{{ app.title }}</h2>
+        <p class="app-description">{{ app.description }}</p>
+        <span class="app-arrow">→</span>
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

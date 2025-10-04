@@ -174,3 +174,58 @@ tr:hover {
     color: #666;
     font-size: 16px;
 }
+
+.apps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.app-card {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    position: relative;
+    border-left: 4px solid #28a745;
+}
+
+.app-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.app-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.app-card h2 {
+    margin: 0 0 10px 0;
+    font-size: 20px;
+    color: #333;
+}
+
+.app-description {
+    color: #666;
+    font-size: 14px;
+    margin: 0 0 15px 0;
+}
+
+.app-arrow {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    font-size: 24px;
+    color: #ccc;
+    transition: all 0.3s ease;
+}
+
+.app-card:hover .app-arrow {
+    color: #28a745;
+    transform: translateX(5px);
+}
