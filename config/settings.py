@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from integration_utils.bitrix24.local_settings_class import LocalSettingsClass
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -11,6 +12,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+
+CSRF_TRUSTED_ORIGINS = [f'https://{os.getenv("DOMAIN")}'] if os.getenv("DOMAIN") else []
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -94,15 +97,41 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 X_FRAME_OPTIONS = 'ALLOWALL'
 
-from integration_utils.bitrix24.local_settings_class import LocalSettingsClass
-
 APP_SETTINGS = LocalSettingsClass(
     portal_domain=os.getenv('DOMAIN'),
     app_domain=os.getenv('NGROK_URL'),
-    app_name='deal_management',
-    salt=os.getenv('SECRET_KEY'),
+    app_name=os.getenv('APP_NAME', 'deal_management'),
+    salt=os.getenv('BITRIX_SALT', os.getenv('SECRET_KEY')),
     secret_key=os.getenv('SECRET_KEY'),
     application_bitrix_client_id=os.getenv('CLIENT_ID'),
     application_bitrix_client_secret=os.getenv('CLIENT_SECRET'),
-    application_index_path='/',
+    application_index_path=os.getenv('APP_INDEX_PATH', '/'),
 )
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{levelname}] {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'deals': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
