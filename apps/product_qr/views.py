@@ -52,8 +52,14 @@ def call_bitrix_webhook(method, params=None):
         raise ValueError('BITRIX_WEBHOOK_URL not configured')
 
     url = f"{webhook_url}{method}"
-    response = requests.post(url, json=params or {})
-    return response.json()
+    response = requests.post(url, json=params or {}, timeout=10)
+    response.raise_for_status()
+
+    data = response.json()
+    if 'error' in data:
+        raise ValueError(data.get('error_description', 'Bitrix API error'))
+
+    return data
 
 
 @smart_auth
