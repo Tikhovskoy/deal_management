@@ -140,5 +140,10 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'integration_utils': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
     },
 }
