@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.NAME }}{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>{{ product.NAME }}</h1>
+</div>
+
+<div class="section">
+    <div style="display: flex; gap: 30px; align-items: flex-start;">
+        {% if product.PREVIEW_PICTURE or product.DETAIL_PICTURE %}
+        <div style="flex-shrink: 0;">
+            <img src="{{ product.PREVIEW_PICTURE|default:product.DETAIL_PICTURE }}"
+                 alt="{{ product.NAME }}"
+                 style="max-width: 300px; border-radius: 8px;">
+        </div>
+        {% endif %}
+
+        <div style="flex: 1;">
+            <h2>Информация о товаре</h2>
+
+            <table>
+                <tr>
+                    <th>Артикул</th>
+                    <td>{{ product.ARTICLE|default:"—" }}</td>
+                </tr>
+                <tr>
+                    <th>Цена</th>
+                    <td class="amount">{{ product.PRICE }} {{ product.CURRENCY_ID }}</td>
+                </tr>
+                {% if product.DESCRIPTION %}
+                <tr>
+                    <th>Описание</th>
+                    <td>{{ product.DESCRIPTION }}</td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

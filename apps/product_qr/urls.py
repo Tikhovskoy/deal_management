@@ -3,4 +3,7 @@ from . import views
 
 app_name = 'product_qr'
 
-urlpatterns = []
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('view/<uuid:uuid>/', views.view_product, name='view_product'),
+]
