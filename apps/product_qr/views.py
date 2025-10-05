@@ -14,6 +14,11 @@ import os
 
 logger = logging.getLogger(__name__)
 
+QR_VERSION = 1
+QR_BOX_SIZE = 10
+QR_BORDER = 4
+QR_IMAGE_FORMAT = 'PNG'
+
 
 def extract_product_image_url(product):
     if product.get('PREVIEW_PICTURE'):
@@ -102,10 +107,10 @@ def index(request):
                 public_url = f"https://{settings.APP_SETTINGS.app_domain}/qr/view/{qr_record.uuid}/"
 
                 qr = qrcode.QRCode(
-                    version=1,
+                    version=QR_VERSION,
                     error_correction=qrcode.constants.ERROR_CORRECT_L,
-                    box_size=10,
-                    border=4,
+                    box_size=QR_BOX_SIZE,
+                    border=QR_BORDER,
                 )
                 qr.add_data(public_url)
                 qr.make(fit=True)
@@ -113,7 +118,7 @@ def index(request):
                 img = qr.make_image(fill_color="black", back_color="white")
 
                 buffer = BytesIO()
-                img.save(buffer, format='PNG')
+                img.save(buffer, format=QR_IMAGE_FORMAT)
                 img_str = base64.b64encode(buffer.getvalue()).decode()
 
                 context = {
