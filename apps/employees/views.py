@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from integration_utils.bitrix24.bitrix_user_auth.main_auth import main_auth
 from functools import wraps
+from datetime import datetime, timedelta
 import logging
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,42 @@ def build_manager_chain(user, users_by_id, department_heads):
     return managers
 
 
+def get_calls_statistics(bitrix_token, users):
+    user_calls = {}
+    for user in users:
+        user_calls[user['ID']] = 0
+
+    try:
+        now = datetime.now()
+        date_from = now - timedelta(hours=24)
+
+        filter_params = {
+            'FILTER': {
+                '>=CALL_START_DATE': date_from.strftime('%Y-%m-%d %H:%M:%S'),
+                'CALL_TYPE': 2
+            }
+        }
+
+        calls_response = bitrix_token.call_api_method('voximplant.statistic.get', filter_params)
+        calls = calls_response.get('result', [])
+
+        for call in calls:
+            duration = int(call.get('CALL_DURATION', 0))
+            portal_user_id = call.get('PORTAL_USER_ID')
+
+            if duration > 60 and portal_user_id:
+                user_id = str(portal_user_id)
+                if user_id in user_calls:
+                    user_calls[user_id] += 1
+
+        logger.info("Получена статистика звонков для %d пользователей", len(user_calls))
+        return user_calls
+
+    except Exception as e:
+        logger.error("Ошибка при получении статистики звонков: %s", str(e))
+        return user_calls
+
+
 @smart_auth
 def index(request):
     try:
@@ -79,6 +116,8 @@ def index(request):
         department_heads = get_department_heads(departments)
         users_by_id = {int(user['ID']): user for user in users}
 
+        user_calls = get_calls_statistics(request.bitrix_user_token, users)
+
         employees_data = []
         for user in users:
             full_name = f"{user.get('LAST_NAME', '')} {user.get('NAME', '')} {user.get('SECOND_NAME', '')}".strip()
@@ -90,7 +129,7 @@ def index(request):
                 'id': user.get('ID'),
                 'name': full_name,
                 'managers': managers_names,
-                'calls_count': 0
+                'calls_count': user_calls.get(user.get('ID'), 0)
             })
 
         context = {
