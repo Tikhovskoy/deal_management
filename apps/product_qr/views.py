@@ -44,6 +44,10 @@ def index(request):
         product_id = request.POST.get('product_id', '').strip()
 
         if product_id:
+            if not product_id.isdigit():
+                error = 'ID товара должен быть числом'
+                return render(request, 'product_qr/index.html', {'error': error})
+
             try:
                 product_response = request.bitrix_user_token.call_api_method(
                     'crm.product.get',
@@ -53,10 +57,15 @@ def index(request):
                 if 'result' in product_response:
                     product = product_response['result']
 
+                    logger.info("Product data when creating QR: %s", product)
+                    logger.info("PREVIEW_PICTURE value: %s", product.get('PREVIEW_PICTURE'))
+                    logger.info("DETAIL_PICTURE value: %s", product.get('DETAIL_PICTURE'))
+
                     member_id = getattr(request.bitrix_user_token, 'member_id', None)
                     qr_record = ProductQR.objects.create(
                         product_id=product_id,
-                        member_id=member_id
+                        member_id=member_id,
+                        product_data=product
                     )
 
                     public_url = f"https://{settings.APP_SETTINGS.app_domain}/qr/view/{qr_record.uuid}/"
@@ -86,8 +95,15 @@ def index(request):
                 else:
                     error = 'Товар не найден'
             except Exception as e:
-                logger.error(f"Error generating QR: {str(e)}")
-                error = f'Ошибка: {str(e)}'
+                logger.error("Error generating QR: %s", str(e))
+                error_str = str(e)
+
+                if 'Product is not found' in error_str or 'not found' in error_str.lower():
+                    error = f'Товар с ID {product_id} не найден. Проверьте правильность ID товара.'
+                elif 'error_description' in error_str:
+                    error = f'Ошибка при получении товара. Проверьте ID товара и попробуйте снова.'
+                else:
+                    error = 'Произошла ошибка при генерации QR-кода. Попробуйте еще раз.'
 
             return render(request, 'product_qr/index.html', {'error': error})
 
@@ -98,45 +114,38 @@ def view_product(request, uuid):
     qr_record = get_object_or_404(ProductQR, uuid=uuid)
 
     try:
-        product_response = call_bitrix_webhook(
-            'crm.product.get',
-            {'id': qr_record.product_id}
-        )
+        product = qr_record.product_data if qr_record.product_data else {}
 
-        if 'result' in product_response:
-            product = product_response['result']
+        if not product:
+            product_response = call_bitrix_webhook(
+                'crm.product.get',
+                {'id': qr_record.product_id}
+            )
+            if 'result' in product_response:
+                product = product_response['result']
 
-            image_url = None
-            if product.get('PREVIEW_PICTURE'):
-                try:
-                    file_response = call_bitrix_webhook(
-                        'disk.file.get',
-                        {'id': product['PREVIEW_PICTURE']}
-                    )
-                    if 'result' in file_response and 'DOWNLOAD_URL' in file_response['result']:
-                        image_url = file_response['result']['DOWNLOAD_URL']
-                except:
-                    pass
+        image_url = None
 
-            if not image_url and product.get('DETAIL_PICTURE'):
-                try:
-                    file_response = call_bitrix_webhook(
-                        'disk.file.get',
-                        {'id': product['DETAIL_PICTURE']}
-                    )
-                    if 'result' in file_response and 'DOWNLOAD_URL' in file_response['result']:
-                        image_url = file_response['result']['DOWNLOAD_URL']
-                except:
-                    pass
-
-            context = {
-                'product': product,
-                'image_url': image_url,
-                'qr_uuid': str(qr_record.uuid)
-            }
-            return render(request, 'product_qr/view.html', context)
+        if product.get('PREVIEW_PICTURE'):
+            image_url = product.get('PREVIEW_PICTURE')
+        elif product.get('DETAIL_PICTURE'):
+            image_url = product.get('DETAIL_PICTURE')
         else:
-            return HttpResponse('Товар не найден', status=404)
+            for key, value in product.items():
+                if key.startswith('PROPERTY_') and isinstance(value, list) and len(value) > 0:
+                    if isinstance(value[0], dict) and 'value' in value[0]:
+                        file_data = value[0]['value']
+                        if isinstance(file_data, dict) and 'downloadUrl' in file_data:
+                            domain = os.getenv('DOMAIN', 'b24-drb9mz.bitrix24.ru')
+                            image_url = f"https://{domain}{file_data['downloadUrl']}"
+                            break
+
+        context = {
+            'product': product,
+            'image_url': image_url,
+            'qr_uuid': str(qr_record.uuid)
+        }
+        return render(request, 'product_qr/view.html', context)
     except Exception as e:
-        logger.error(f"Error viewing product: {str(e)}")
+        logger.error("Error viewing product: %s", str(e))
         return HttpResponse('Ошибка получения данных товара', status=500)
