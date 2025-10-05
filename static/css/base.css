@@ -279,3 +279,55 @@ tr:hover {
 .product-details {
     flex: 1;
 }
+
+@media (max-width: 768px) {
+    .product-layout {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .product-image {
+        width: 100%;
+        text-align: center;
+    }
+
+    .product-image img {
+        max-width: 100%;
+        width: auto;
+        height: auto;
+    }
+
+    .apps-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header h1 {
+        font-size: 24px;
+    }
+
+    .section {
+        padding: 15px;
+    }
+
+    table {
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 10px 8px;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 12px 20px;
+    }
+
+    .button-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .button-group .btn {
+        width: 100%;
+    }
+}
