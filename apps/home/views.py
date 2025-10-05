@@ -19,6 +19,9 @@ def smart_auth(func):
 
 @smart_auth
 def index(request):
+    user_data = request.bitrix_user_token.call_api_method('user.current')
+    user_name = user_data.get('result', {}).get('NAME', 'Пользователь')
+
     apps = [
         {
             'title': 'Управление сделками',
@@ -37,7 +40,8 @@ def index(request):
     ]
 
     context = {
-        'apps': apps
+        'apps': apps,
+        'user_name': user_name
     }
 
     return render(request, 'home/index.html', context)
