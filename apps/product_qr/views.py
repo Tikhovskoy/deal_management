@@ -136,7 +136,7 @@ def view_product(request, uuid):
                     if isinstance(value[0], dict) and 'value' in value[0]:
                         file_data = value[0]['value']
                         if isinstance(file_data, dict) and 'downloadUrl' in file_data:
-                            domain = os.getenv('DOMAIN', 'b24-drb9mz.bitrix24.ru')
+                            domain = settings.APP_SETTINGS.portal_domain
                             image_url = f"https://{domain}{file_data['downloadUrl']}"
                             break
 
