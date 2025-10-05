@@ -6,6 +6,7 @@
 <div class="header">
     <h1>Генерация QR-кодов для товаров</h1>
     <p class="user-info">Введите ID товара для генерации QR-кода</p>
+    <a href="/" class="btn btn-secondary" style="margin-top: 10px;">← На главную</a>
 </div>
 
 <div class="section">
@@ -16,6 +17,7 @@
     {% endif %}
 
     <form method="POST" action="{% url 'product_qr:index' %}">
+        {% csrf_token %}
         <div class="form-group">
             <label for="product_id">ID товара <span class="required">*</span></label>
             <input type="text" id="product_id" name="product_id" required>
