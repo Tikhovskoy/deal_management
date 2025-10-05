@@ -10,6 +10,7 @@ class ProductQR(models.Model):
     )
     product_id = models.CharField(max_length=50)
     member_id = models.CharField(max_length=50, blank=True, null=True)
+    product_data = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
