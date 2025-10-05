@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Иерархия сотрудников{% endblock %}
+
+{% block content %}
+<div class="header">
+    <h1>Иерархия сотрудников</h1>
+    <a href="/" class="btn btn-secondary mt-10">← На главную</a>
+</div>
+
+<div class="section">
+    <h2>Сотрудники компании</h2>
+
+    {% if employees %}
+    <table>
+        <thead>
+            <tr>
+                <th>Сотрудник</th>
+                <th>Руководители</th>
+                <th>Звонков за 24ч</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in employees %}
+            <tr>
+                <td>
+                    <a href="#" class="employee-link" data-user-id="{{ employee.id }}">
+                        {{ employee.name }}
+                    </a>
+                </td>
+                <td>
+                    {% if employee.managers %}
+                        {{ employee.managers|join:", " }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td class="amount">{{ employee.calls_count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-data">
+        Нет данных о сотрудниках
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.employee-link {
+    color: #007bff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.employee-link:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}
