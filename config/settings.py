@@ -13,7 +13,11 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
-CSRF_TRUSTED_ORIGINS = [f'https://{os.getenv("DOMAIN")}'] if os.getenv("DOMAIN") else []
+CSRF_TRUSTED_ORIGINS = []
+if os.getenv("DOMAIN"):
+    CSRF_TRUSTED_ORIGINS.append(f'https://{os.getenv("DOMAIN")}')
+if os.getenv("NGROK_URL"):
+    CSRF_TRUSTED_ORIGINS.append(f'https://{os.getenv("NGROK_URL")}')
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -29,6 +33,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "config.middleware.NgrokSkipWarningMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",

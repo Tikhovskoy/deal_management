@@ -9,9 +9,9 @@
 
 <div class="section">
     <div style="display: flex; gap: 30px; align-items: flex-start;">
-        {% if product.PREVIEW_PICTURE or product.DETAIL_PICTURE %}
+        {% if image_url %}
         <div style="flex-shrink: 0;">
-            <img src="{{ product.PREVIEW_PICTURE|default:product.DETAIL_PICTURE }}"
+            <img src="{{ image_url }}"
                  alt="{{ product.NAME }}"
                  style="max-width: 300px; border-radius: 8px;">
         </div>

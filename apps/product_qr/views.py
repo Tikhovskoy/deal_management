@@ -53,12 +53,13 @@ def index(request):
                 if 'result' in product_response:
                     product = product_response['result']
 
+                    member_id = getattr(request.bitrix_user_token, 'member_id', None)
                     qr_record = ProductQR.objects.create(
                         product_id=product_id,
-                        member_id=request.bitrix_user_token.member_id
+                        member_id=member_id
                     )
 
-                    public_url = f"{settings.APP_SETTINGS.app_domain}/qr/view/{qr_record.uuid}/"
+                    public_url = f"https://{settings.APP_SETTINGS.app_domain}/qr/view/{qr_record.uuid}/"
 
                     qr = qrcode.QRCode(
                         version=1,
@@ -105,8 +106,32 @@ def view_product(request, uuid):
         if 'result' in product_response:
             product = product_response['result']
 
+            image_url = None
+            if product.get('PREVIEW_PICTURE'):
+                try:
+                    file_response = call_bitrix_webhook(
+                        'disk.file.get',
+                        {'id': product['PREVIEW_PICTURE']}
+                    )
+                    if 'result' in file_response and 'DOWNLOAD_URL' in file_response['result']:
+                        image_url = file_response['result']['DOWNLOAD_URL']
+                except:
+                    pass
+
+            if not image_url and product.get('DETAIL_PICTURE'):
+                try:
+                    file_response = call_bitrix_webhook(
+                        'disk.file.get',
+                        {'id': product['DETAIL_PICTURE']}
+                    )
+                    if 'result' in file_response and 'DOWNLOAD_URL' in file_response['result']:
+                        image_url = file_response['result']['DOWNLOAD_URL']
+                except:
+                    pass
+
             context = {
                 'product': product,
+                'image_url': image_url,
                 'qr_uuid': str(qr_record.uuid)
             }
             return render(request, 'product_qr/view.html', context)
