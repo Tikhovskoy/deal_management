@@ -9,6 +9,8 @@ from io import BytesIO
 import base64
 from django.conf import settings
 import logging
+import requests
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +26,16 @@ def smart_auth(func):
         else:
             return main_auth(on_cookies=True, set_cookie=True)(func)(request, *args, **kwargs)
     return wrapper
+
+
+def call_bitrix_webhook(method, params=None):
+    webhook_url = os.getenv('BITRIX_WEBHOOK_URL')
+    if not webhook_url:
+        raise ValueError('BITRIX_WEBHOOK_URL not configured')
+
+    url = f"{webhook_url}{method}"
+    response = requests.post(url, json=params or {})
+    return response.json()
 
 
 @smart_auth
@@ -85,7 +97,7 @@ def view_product(request, uuid):
     qr_record = get_object_or_404(ProductQR, uuid=uuid)
 
     try:
-        product_response = request.bitrix_user_token.call_api_method(
+        product_response = call_bitrix_webhook(
             'crm.product.get',
             {'id': qr_record.product_id}
         )
