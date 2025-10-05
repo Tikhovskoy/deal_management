@@ -4,7 +4,15 @@ Django проект с локальными приложениями для Bitr
 
 ## Приложения
 
-### 1. Deal Management (apps/deals/)
+### Home (apps/home/)
+Главная страница с выбором доступных приложений.
+
+**Функциональность:**
+- Отображение приветствия с именем пользователя
+- Визуальная карточка каждого приложения с описанием
+- Навигация между приложениями
+
+### Deal Management (apps/deals/)
 Управление сделками через iframe приложение.
 
 **Функциональность:**
@@ -15,10 +23,16 @@ Django проект с локальными приложениями для Bitr
 - Автоматический перевод стадий сделок на русский язык
 
 ### 2. Product QR Generator (apps/product_qr/)
-Генерация QR-кодов для товаров с секретными ссылками.
+Генерация QR-кодов для товаров с публичными секретными ссылками.
 
 **Функциональность:**
-- В разработке...
+- Генерация QR-кодов для товаров из Bitrix24
+- Создание публичных страниц товаров без авторизации
+- Секретные непредсказуемые URL на основе UUID4
+- Возможность создания нескольких QR-кодов для одного товара
+- Автоматическое извлечение изображений товара из разных полей
+- Скачивание QR-кодов в формате PNG
+- Сохранение данных товара для доступа без авторизации
 
 ## Требования
 
@@ -34,6 +48,7 @@ Django проект с локальными приложениями для Bitr
 - **python-dotenv 1.0.0** - управление переменными окружения
 - **requests 2.31.0** - HTTP библиотека для API запросов
 - **django-prettyjson 0.4.1** - виджет для отображения JSON в Django Admin
+- **qrcode[pil] 7.4.2** - генерация QR-кодов с поддержкой изображений
 
 ## Установка
 
@@ -103,6 +118,9 @@ NGROK_URL=your-ngrok-domain.ngrok-free.app
 CUSTOM_FIELD_NAME=UF_CRM_1759500436
 DEFAULT_STAGE=NEW
 DEFAULT_CURRENCY=RUB
+
+# Bitrix24 Webhook (для публичного доступа к товарам)
+BITRIX_WEBHOOK_URL=https://your-domain.bitrix24.ru/rest/1/webhook_key/
 ```
 
 **Генерация BITRIX_SALT:**
@@ -150,6 +168,16 @@ ngrok http 8000
 4. Скопируйте символьный код поля (например, `UF_CRM_1759500436`)
 5. Обновите переменную `CUSTOM_FIELD_NAME` в `.env`
 
+### Создание входящего webhook
+
+Для публичного доступа к товарам необходим входящий webhook:
+
+1. Перейдите в Bitrix24: Разработчикам → Другое → Входящий вебхук
+2. Создайте новый webhook
+3. Выберите права доступа: CRM (чтение)
+4. Скопируйте URL вебхука (например, `https://your-domain.bitrix24.ru/rest/1/webhook_key/`)
+5. Обновите переменную `BITRIX_WEBHOOK_URL` в `.env`
+
 ## Структура проекта
 
 ```
@@ -157,21 +185,35 @@ deal_management/
 ├── config/              # Настройки Django
 │   ├── settings.py
 │   ├── urls.py
+│   ├── middleware.py    # Кастомные middleware (ngrok warning bypass)
 │   └── wsgi.py
 ├── apps/                # Django приложения
-│   ├── deals/           # Задание 1: Управление сделками
+│   ├── home/            # Главная страница с выбором приложений
+│   │   ├── views.py
+│   │   └── urls.py
+│   ├── deals/           # Управление сделками
 │   │   ├── views.py
 │   │   ├── urls.py
 │   │   └── templatetags/
 │   │       └── deal_filters.py
-│   └── product_qr/      # Задание 2: QR-коды для товаров
+│   └── product_qr/      # QR-коды для товаров
 │       ├── models.py
 │       ├── views.py
-│       └── urls.py
+│       ├── urls.py
+│       └── migrations/
 ├── templates/           # HTML шаблоны
-│   └── deals/
+│   ├── base.html        # Базовый шаблон
+│   ├── home/
+│   │   └── index.html
+│   ├── deals/
+│   │   └── index.html
+│   └── product_qr/
 │       ├── index.html
-│       └── error.html
+│       ├── generated.html
+│       └── view.html
+├── static/              # Статические файлы
+│   └── css/
+│       └── base.css
 ├── integration_utils/   # Submodule для работы с Bitrix24
 ├── .env                 # Переменные окружения (не в git)
 ├── .env.example         # Пример переменных окружения
@@ -190,9 +232,14 @@ deal_management/
 
 ### Используемые API методы Bitrix24
 
+**Авторизованные запросы (через OAuth):**
 - `user.current` - получение информации о текущем пользователе
 - `crm.deal.list` - получение списка сделок с фильтрацией и сортировкой
 - `crm.deal.add` - создание новой сделки
+- `crm.product.get` - получение информации о товаре с сохранением в БД
+
+**Публичные запросы (через webhook):**
+- `crm.product.get` - получение информации о товаре для публичной страницы
 
 ### Template Filters
 
@@ -207,6 +254,40 @@ deal_management/
 {{ deal.STAGE_ID|translate_stage }}
 ```
 
+### Модель ProductQR
+
+Приложение использует модель для хранения информации о QR-кодах:
+
+```python
+class ProductQR(models.Model):
+    uuid = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    product_id = models.CharField(max_length=50)
+    member_id = models.CharField(max_length=50)
+    product_data = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+```
+
+- `uuid` - уникальный идентификатор для секретного URL
+- `product_id` - ID товара в Bitrix24
+- `member_id` - ID портала Bitrix24
+- `product_data` - полные данные товара (JSON) для доступа без авторизации
+- `created_at` - дата создания QR-кода
+
+### Генерация QR-кодов
+
+Приложение использует библиотеку `qrcode` для генерации QR-кодов:
+
+- Формат: PNG
+- Кодировка: Base64 для встраивания в HTML
+- Публичный URL: `https://your-domain.ngrok-free.app/qr/view/{uuid}/`
+- UUID генерируется автоматически при создании записи
+
+### Middleware
+
+**NgrokSkipWarningMiddleware** (`config/middleware.py`):
+- Автоматически добавляет заголовок для обхода warning страницы ngrok
+- Позволяет открывать приложение в iframe без дополнительных действий
+
 ### Безопасность
 
 Приложение использует отдельные ключи для разных целей:
@@ -215,7 +296,12 @@ deal_management/
 
 ### Логирование
 
-Все операции с Bitrix24 API логируются в консоль с уровнем INFO. Ошибки логируются с уровнем ERROR.
+Настроены следующие логгеры:
+
+- **apps** - логирование приложений с уровнем INFO
+- **integration_utils** - логирование Bitrix24 интеграции с уровнем WARNING (избегаем избыточных INFO логов)
+
+Все ошибки логируются с уровнем ERROR и выводятся в консоль.
 
 ## Устранение неполадок
 
@@ -251,6 +337,30 @@ deal_management/
 ```bash
 python -c "import secrets; print(secrets.token_urlsafe(50))"
 ```
+
+### QR-код не открывает страницу товара
+
+Проверьте:
+- URL ngrok актуален и доступен извне
+- Переменная `NGROK_URL` в `.env` обновлена
+- Домен ngrok добавлен в `ALLOWED_HOSTS` и `CSRF_TRUSTED_ORIGINS`
+- Webhook `BITRIX_WEBHOOK_URL` настроен корректно
+
+### Публичная страница товара не загружается
+
+Убедитесь что:
+- Webhook имеет права на чтение CRM
+- В модели ProductQR сохранены данные товара (`product_data`)
+- UUID в URL корректный и существует в базе данных
+
+### Изображения товара не отображаются
+
+Приложение ищет изображения в следующем порядке:
+1. `PREVIEW_PICTURE` - основное изображение
+2. `DETAIL_PICTURE` - детальное изображение
+3. `PROPERTY_*` - кастомные поля с типом файл
+
+Если изображения не отображаются, проверьте что они загружены в карточку товара в Bitrix24.
 
 ## Лицензия
 
