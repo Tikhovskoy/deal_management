@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     "integration_utils.bitrix24",
     "apps.home",
     "apps.deals",
+    "apps.product_qr",
 ]
 
 MIDDLEWARE = [

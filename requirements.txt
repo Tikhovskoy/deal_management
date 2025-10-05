@@ -3,3 +3,5 @@ django-prettyjson==0.4.1
 psycopg-binary==3.2.10
 python-dotenv==1.0.0
 requests==2.31.0
+qrcode[pil]==7.4.2
+pillow==10.4.0
