@@ -56,14 +56,17 @@ class Command(BaseCommand):
 
             phone_number = f"+7{random.randint(9000000000, 9999999999)}"
 
+            call_id = f"test_call_{user_id}_{int(call_start.timestamp())}"
+
             params = {
-                'USER_PHONE_INNER': user_id,
+                'USER_ID': user_id,
                 'PHONE_NUMBER': phone_number,
                 'CALL_START_DATE': call_start.strftime('%Y-%m-%d %H:%M:%S'),
-                'CALL_DURATION': duration,
-                'TYPE': 2,
-                'CRM_CREATE': 0,
-                'SHOW': 0
+                'DURATION': duration,
+                'TYPE': '2',
+                'CALL_ID': call_id,
+                'CRM_CREATE': '0',
+                'SHOW': '0'
             }
 
             try:
