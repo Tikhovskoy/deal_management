@@ -78,58 +78,56 @@ def index(request):
                     {'id': product_id}
                 )
 
-                if 'result' in product_response:
-                    product = product_response['result']
+                if 'error' in product_response:
+                    error = f'Товар с ID {product_id} не найден. Проверьте правильность ID товара.'
+                    return render(request, 'product_qr/index.html', {'error': error})
 
-                    logger.info("Product data when creating QR: %s", product)
-                    logger.info("PREVIEW_PICTURE value: %s", product.get('PREVIEW_PICTURE'))
-                    logger.info("DETAIL_PICTURE value: %s", product.get('DETAIL_PICTURE'))
+                if 'result' not in product_response:
+                    error = 'Некорректный ответ от API. Попробуйте еще раз.'
+                    return render(request, 'product_qr/index.html', {'error': error})
 
-                    member_id = getattr(request.bitrix_user_token, 'member_id', None)
-                    qr_record = ProductQR.objects.create(
-                        product_id=product_id,
-                        member_id=member_id,
-                        product_data=product
-                    )
+                product = product_response['result']
 
-                    public_url = f"https://{settings.APP_SETTINGS.app_domain}/qr/view/{qr_record.uuid}/"
+                logger.info("Product data when creating QR: %s", product)
+                logger.info("PREVIEW_PICTURE value: %s", product.get('PREVIEW_PICTURE'))
+                logger.info("DETAIL_PICTURE value: %s", product.get('DETAIL_PICTURE'))
 
-                    qr = qrcode.QRCode(
-                        version=1,
-                        error_correction=qrcode.constants.ERROR_CORRECT_L,
-                        box_size=10,
-                        border=4,
-                    )
-                    qr.add_data(public_url)
-                    qr.make(fit=True)
+                member_id = getattr(request.bitrix_user_token, 'member_id', None)
+                qr_record = ProductQR.objects.create(
+                    product_id=product_id,
+                    member_id=member_id,
+                    product_data=product
+                )
 
-                    img = qr.make_image(fill_color="black", back_color="white")
+                public_url = f"https://{settings.APP_SETTINGS.app_domain}/qr/view/{qr_record.uuid}/"
 
-                    buffer = BytesIO()
-                    img.save(buffer, format='PNG')
-                    img_str = base64.b64encode(buffer.getvalue()).decode()
+                qr = qrcode.QRCode(
+                    version=1,
+                    error_correction=qrcode.constants.ERROR_CORRECT_L,
+                    box_size=10,
+                    border=4,
+                )
+                qr.add_data(public_url)
+                qr.make(fit=True)
 
-                    context = {
-                        'product': product,
-                        'qr_image': img_str,
-                        'public_url': public_url,
-                        'uuid': str(qr_record.uuid)
-                    }
-                    return render(request, 'product_qr/generated.html', context)
-                else:
-                    error = 'Товар не найден'
+                img = qr.make_image(fill_color="black", back_color="white")
+
+                buffer = BytesIO()
+                img.save(buffer, format='PNG')
+                img_str = base64.b64encode(buffer.getvalue()).decode()
+
+                context = {
+                    'product': product,
+                    'qr_image': img_str,
+                    'public_url': public_url,
+                    'uuid': str(qr_record.uuid)
+                }
+                return render(request, 'product_qr/generated.html', context)
+
             except Exception as e:
                 logger.error("Error generating QR: %s", str(e))
-                error_str = str(e)
-
-                if 'Product is not found' in error_str or 'not found' in error_str.lower():
-                    error = f'Товар с ID {product_id} не найден. Проверьте правильность ID товара.'
-                elif 'error_description' in error_str:
-                    error = f'Ошибка при получении товара. Проверьте ID товара и попробуйте снова.'
-                else:
-                    error = 'Произошла ошибка при генерации QR-кода. Попробуйте еще раз.'
-
-            return render(request, 'product_qr/index.html', {'error': error})
+                error = 'Произошла ошибка при генерации QR-кода. Попробуйте еще раз.'
+                return render(request, 'product_qr/index.html', {'error': error})
 
     return render(request, 'product_qr/index.html')
 
