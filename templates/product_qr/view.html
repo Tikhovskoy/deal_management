@@ -8,16 +8,14 @@
 </div>
 
 <div class="section">
-    <div style="display: flex; gap: 30px; align-items: flex-start;">
+    <div class="product-layout">
         {% if image_url %}
-        <div style="flex-shrink: 0;">
-            <img src="{{ image_url }}"
-                 alt="{{ product.NAME }}"
-                 style="max-width: 300px; border-radius: 8px;">
+        <div class="product-image">
+            <img src="{{ image_url }}" alt="{{ product.NAME }}">
         </div>
         {% endif %}
 
-        <div style="flex: 1;">
+        <div class="product-details">
             <h2>Информация о товаре</h2>
 
             <table>
@@ -32,7 +30,7 @@
                 {% if product.DESCRIPTION %}
                 <tr>
                     <th>Описание</th>
-                    <td>{{ product.DESCRIPTION }}</td>
+                    <td>{{ product.DESCRIPTION|safe }}</td>
                 </tr>
                 {% endif %}
             </table>

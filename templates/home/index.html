@@ -5,7 +5,11 @@
 {% block content %}
 <div class="header">
     <h1>Bitrix24 Apps</h1>
-    <p class="user-info">Выберите приложение для работы</p>
+    <div class="user-info">
+        <p class="success">✓ Авторизация успешна!</p>
+        <p>Добро пожаловать, <strong>{{ user_name }}</strong>!</p>
+        <p class="mt-10">Выберите приложение для работы</p>
+    </div>
 </div>
 
 <div class="apps-grid">
