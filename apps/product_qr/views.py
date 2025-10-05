@@ -15,6 +15,24 @@ import os
 logger = logging.getLogger(__name__)
 
 
+def extract_product_image_url(product):
+    if product.get('PREVIEW_PICTURE'):
+        return product.get('PREVIEW_PICTURE')
+
+    if product.get('DETAIL_PICTURE'):
+        return product.get('DETAIL_PICTURE')
+
+    for key, value in product.items():
+        if key.startswith('PROPERTY_') and isinstance(value, list) and len(value) > 0:
+            if isinstance(value[0], dict) and 'value' in value[0]:
+                file_data = value[0]['value']
+                if isinstance(file_data, dict) and 'downloadUrl' in file_data:
+                    domain = settings.APP_SETTINGS.portal_domain
+                    return f"https://{domain}{file_data['downloadUrl']}"
+
+    return None
+
+
 def smart_auth(func):
     @csrf_exempt
     @wraps(func)
@@ -124,21 +142,7 @@ def view_product(request, uuid):
             if 'result' in product_response:
                 product = product_response['result']
 
-        image_url = None
-
-        if product.get('PREVIEW_PICTURE'):
-            image_url = product.get('PREVIEW_PICTURE')
-        elif product.get('DETAIL_PICTURE'):
-            image_url = product.get('DETAIL_PICTURE')
-        else:
-            for key, value in product.items():
-                if key.startswith('PROPERTY_') and isinstance(value, list) and len(value) > 0:
-                    if isinstance(value[0], dict) and 'value' in value[0]:
-                        file_data = value[0]['value']
-                        if isinstance(file_data, dict) and 'downloadUrl' in file_data:
-                            domain = settings.APP_SETTINGS.portal_domain
-                            image_url = f"https://{domain}{file_data['downloadUrl']}"
-                            break
+        image_url = extract_product_image_url(product)
 
         context = {
             'product': product,
