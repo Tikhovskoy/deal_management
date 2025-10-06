@@ -1,48 +1,49 @@
 {% extends 'base.html' %}
 
-{% block title %}Иерархия сотрудников{% endblock %}
+{% block extra_css %}
+<style>
+    .profile-link {
+        color: #007bff;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .profile-link:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-{% include 'includes/page_header.html' with title='Иерархия сотрудников' back_url='/' %}
+    {% include 'includes/page_header.html' with title='Иерархия сотрудников' show_back_button=True %}
 
-<div class="section">
-    <h2>Сотрудники компании</h2>
-
-    {% if employees %}
-    <table>
-        <thead>
-            <tr>
-                <th>Сотрудник</th>
-                <th>Руководители</th>
-                <th>Звонков за 24ч</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for employee in employees %}
-            <tr>
-                <td>
-                    <a href="#" class="employee-link" data-user-id="{{ employee.id }}">
-                        {{ employee.name }}
-                    </a>
-                </td>
-                <td>
-                    {% if employee.managers %}
-                        {{ employee.managers|join:", " }}
-                    {% else %}
-                        —
-                    {% endif %}
-                </td>
-                <td class="amount">{{ employee.calls_count }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <div class="no-data">
-        Нет данных о сотрудниках
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="thead-light">
+                <tr>
+                    <th>Сотрудник</th>
+                    <th>Отдел</th>
+                    <th>Руководители</th>
+                    <th>Звонки (более 60 сек) за 24 часа</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in employees %}
+                    <tr>
+                        <td><span class="profile-link" onclick="openProfile({{ employee.id }})">{{ employee.name }}</span></td>
+                        <td>{{ employee.department }}</td>
+                        <td>{{ employee.managers|join:", "|default:"-" }}</td>
+                        <td>{{ employee.calls_count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    {% endif %}
-</div>
+
+    <script>
+        function openProfile(userId) {
+            BX24.openPath('/company/personal/user/' + userId + '/');
+        }
+    </script>
 {% endblock %}
 
 {% block extra_js %}

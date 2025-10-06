@@ -134,6 +134,7 @@ def index(request):
 
         department_heads = get_department_heads(departments)
         users_by_id = {int(user['ID']): user for user in users}
+        departments_by_id = {str(dept['ID']): dept['NAME'] for dept in departments}
 
         user_calls = get_calls_statistics(request.bitrix_user_token, users)
 
@@ -144,9 +145,15 @@ def index(request):
             managers = build_manager_chain(user, users_by_id, department_heads)
             managers_names = [f"{m.get('LAST_NAME', '')} {m.get('NAME', '')}".strip() for m in managers]
 
+            department_ids = user.get('UF_DEPARTMENT', [])
+            department_name = ''
+            if department_ids:
+                department_name = departments_by_id.get(str(department_ids[0]), 'Не указан')
+
             employees_data.append({
                 'id': user.get('ID'),
                 'name': full_name,
+                'department': department_name,
                 'managers': managers_names,
                 'calls_count': user_calls.get(str(user.get('ID')), 0)
             })

@@ -3,7 +3,7 @@
 {% block title %}Генерация QR-кодов для товаров{% endblock %}
 
 {% block content %}
-{% include 'includes/page_header.html' with title='Генерация QR-кодов для товаров' subtitle='Введите ID товара для генерации QR-кода' back_url='/' %}
+{% include 'includes/page_header.html' with title='Генерация QR-кодов для товаров' show_back_button=True %}
 
 <div class="section">
     {% if error %}
