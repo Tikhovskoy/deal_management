@@ -3,10 +3,8 @@
 {% block title %}Ошибка - Bitrix24{% endblock %}
 
 {% block content %}
+{% include 'includes/page_header.html' with title='Ошибка' %}
 <div class="section">
-    <div class="alert alert-error">
-        <h1>Ошибка</h1>
-        <p>{{ error }}</p>
-    </div>
+    {% include 'includes/alert.html' with alert_type='error' message=error %}
 </div>
 {% endblock %}

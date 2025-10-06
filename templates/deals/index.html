@@ -4,10 +4,7 @@
 {% block title %}Управление сделками - Bitrix24{% endblock %}
 
 {% block content %}
-<div class="header">
-    <h1>Управление сделками Bitrix24</h1>
-    <a href="/" class="btn btn-secondary mt-10">← На главную</a>
-</div>
+{% include 'includes/page_header.html' with title='Управление сделками Bitrix24' back_url='/' %}
 
 <div class="section">
     <h2>10 последних активных сделок</h2>
@@ -43,15 +40,11 @@
     <h2>Создать новую сделку</h2>
 
     {% if success_message %}
-    <div class="alert alert-success">
-        {{ success_message }}
-    </div>
+        {% include 'includes/alert.html' with alert_type='success' message=success_message %}
     {% endif %}
 
     {% if error_message %}
-    <div class="alert alert-error">
-        {{ error_message }}
-    </div>
+        {% include 'includes/alert.html' with alert_type='error' message=error_message %}
     {% endif %}
 
     <form method="POST" action="?DOMAIN={{ request.GET.DOMAIN }}&PROTOCOL={{ request.GET.PROTOCOL }}&LANG={{ request.GET.LANG }}&APP_SID={{ request.GET.APP_SID }}">
@@ -66,10 +59,9 @@
             <label for="{{ custom_field_name }}">Источник лида <span class="required">*</span></label>
             <select id="{{ custom_field_name }}" name="{{ custom_field_name }}" required>
                 <option value="">Выберите источник...</option>
-                <option value="44">Сайт</option>
-                <option value="46">Телефон</option>
-                <option value="48">Email</option>
-                <option value="50">Реклама</option>
+                {% for option in lead_source_options %}
+                    <option value="{{ option.ID }}">{{ option.VALUE }}</option>
+                {% endfor %}
             </select>
         </div>
 

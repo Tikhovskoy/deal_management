@@ -3,14 +3,10 @@
 {% block title %}Ошибка{% endblock %}
 
 {% block content %}
-<div class="header">
-    <h1>Ошибка</h1>
-</div>
+{% include 'includes/page_header.html' with title='Ошибка' %}
 
 <div class="section">
-    <div class="alert alert-error">
-        {{ error }}
-    </div>
+    {% include 'includes/alert.html' with alert_type='error' message=error %}
     <a href="/employees/" class="btn btn-secondary">Попробовать снова</a>
     <a href="/" class="btn btn-secondary">На главную</a>
 </div>

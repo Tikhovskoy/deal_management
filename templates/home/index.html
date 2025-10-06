@@ -3,14 +3,7 @@
 {% block title %}Bitrix24 Apps - Выбор приложения{% endblock %}
 
 {% block content %}
-<div class="header">
-    <h1>Bitrix24 Apps</h1>
-    <div class="user-info">
-        <p class="success">✓ Авторизация успешна!</p>
-        <p>Добро пожаловать, <strong>{{ user_name }}</strong>!</p>
-        <p class="mt-10">Выберите приложение для работы</p>
-    </div>
-</div>
+{% include 'includes/page_header.html' with title='Bitrix24 Apps' subtitle='Добро пожаловать, '|add:user_name|add:'! Выберите приложение для работы' %}
 
 <div class="apps-grid">
     {% for app in apps %}

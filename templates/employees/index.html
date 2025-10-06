@@ -3,10 +3,7 @@
 {% block title %}Иерархия сотрудников{% endblock %}
 
 {% block content %}
-<div class="header">
-    <h1>Иерархия сотрудников</h1>
-    <a href="/" class="btn btn-secondary mt-10">← На главную</a>
-</div>
+{% include 'includes/page_header.html' with title='Иерархия сотрудников' back_url='/' %}
 
 <div class="section">
     <h2>Сотрудники компании</h2>
@@ -48,38 +45,24 @@
 </div>
 {% endblock %}
 
-{% block extra_css %}
-<style>
-.employee-link {
-    color: #007bff;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.employee-link:hover {
-    text-decoration: underline;
-}
-</style>
-{% endblock %}
-
 {% block extra_js %}
 <script src="//api.bitrix24.com/api/v1/"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    BX24.init(function() {
-        const employeeLinks = document.querySelectorAll('.employee-link');
+    document.addEventListener('DOMContentLoaded', function () {
+        BX24.init(function () {
+            const employeeLinks = document.querySelectorAll('.employee-link');
 
-        employeeLinks.forEach(function(link) {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const userId = this.getAttribute('data-user-id');
+            employeeLinks.forEach(function (link) {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const userId = this.getAttribute('data-user-id');
 
-                BX24.openPath('/company/personal/user/' + userId + '/', function() {
-                    console.log('Открыт профиль пользователя', userId);
+                    BX24.openPath('/company/personal/user/' + userId + '/', function () {
+                        console.log('Открыт профиль пользователя', userId);
+                    });
                 });
             });
         });
     });
-});
 </script>
 {% endblock %}

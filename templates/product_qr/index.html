@@ -3,17 +3,11 @@
 {% block title %}Генерация QR-кодов для товаров{% endblock %}
 
 {% block content %}
-<div class="header">
-    <h1>Генерация QR-кодов для товаров</h1>
-    <p class="user-info">Введите ID товара для генерации QR-кода</p>
-    <a href="/" class="btn btn-secondary mt-10">← На главную</a>
-</div>
+{% include 'includes/page_header.html' with title='Генерация QR-кодов для товаров' subtitle='Введите ID товара для генерации QR-кода' back_url='/' %}
 
 <div class="section">
     {% if error %}
-    <div class="alert alert-error">
-        {{ error }}
-    </div>
+        {% include 'includes/alert.html' with alert_type='error' message=error %}
     {% endif %}
 
     <form method="POST" action="{% url 'product_qr:index' %}">

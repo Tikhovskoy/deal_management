@@ -331,3 +331,13 @@ tr:hover {
         width: 100%;
     }
 }
+
+.employee-link {
+    color: #007bff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.employee-link:hover {
+    text-decoration: underline;
+}

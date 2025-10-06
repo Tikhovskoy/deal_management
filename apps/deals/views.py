@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from integration_utils.bitrix24.bitrix_user_auth.main_auth import main_auth
 from functools import wraps
+from django.conf import settings
 import logging
 import os
 
@@ -90,12 +91,32 @@ def index(request):
 
         deals = deals_response.get('result', [])[:10]
 
+        lead_source_options = []
+        try:
+            fields_response = request.bitrix_user_token.call_api_method('crm.deal.fields')
+            if 'result' in fields_response:
+                all_fields = fields_response['result']
+                custom_field_data = all_fields.get(CUSTOM_FIELD_NAME)
+                if custom_field_data and custom_field_data.get('items'):
+                    lead_source_options = custom_field_data['items']
+                else:
+                    logger.warning(f"Custom field {CUSTOM_FIELD_NAME} not found or has no items.")
+                    if not error_message: error_message = f"Не удалось найти кастомное поле {CUSTOM_FIELD_NAME}."
+            else:
+                logger.error(f"Failed to get deal fields: {fields_response.get('error_description')}")
+                if not error_message: error_message = "Не удалось загрузить описание полей сделки."
+
+        except Exception as e:
+            logger.error(f"Could not fetch lead source options: {e}")
+            if not error_message: error_message = "Не удалось загрузить опции для поля 'Источник лида'."
+
         context = {
             'user_name': user_name,
             'deals': deals,
             'success_message': success_message,
             'error_message': error_message,
             'custom_field_name': CUSTOM_FIELD_NAME,
+            'lead_source_options': lead_source_options,
         }
 
         logger.info(f"Получены данные пользователя: {user_name}")

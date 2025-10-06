@@ -3,9 +3,7 @@
 {% block title %}{{ product.NAME }}{% endblock %}
 
 {% block content %}
-<div class="header">
-    <h1>{{ product.NAME }}</h1>
-</div>
+{% include 'includes/page_header.html' with title=product.NAME %}
 
 <div class="section">
     <div class="product-layout">
