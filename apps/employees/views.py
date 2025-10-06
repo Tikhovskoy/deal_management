@@ -1,8 +1,9 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from integration_utils.bitrix24.bitrix_user_auth.main_auth import main_auth
+from django.utils import timezone
 from functools import wraps
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 
 logger = logging.getLogger(__name__)
@@ -65,38 +66,46 @@ def build_manager_chain(user, users_by_id, department_heads):
 
 
 def get_calls_statistics(bitrix_token, users):
-    user_calls = {}
-    for user in users:
-        user_calls[user['ID']] = 0
+    user_calls = {str(user['ID']): 0 for user in users}
 
     try:
-        now = datetime.now()
+        now = timezone.now()
         date_from = now - timedelta(hours=24)
 
-        filter_params = {
-            'FILTER': {
-                '>=CALL_START_DATE': date_from.strftime('%Y-%m-%d %H:%M:%S'),
-                'CALL_TYPE': 2
-            }
+        stats_params = {
+            'filter': {
+                'START_DATE': date_from.isoformat(),
+                'END_DATE': now.isoformat(),
+                'TYPE': 'out',
+            },
+            'select': ['PORTAL_USER_ID', 'CALL_DURATION']
         }
 
-        calls_response = bitrix_token.call_api_method('voximplant.statistic.get', filter_params)
-        calls = calls_response.get('result', [])
+        logger.info(f"Fetching call statistics with params: {stats_params}")
+        stats_response = bitrix_token.call_api_method('voximplant.statistic.get', stats_params)
 
-        for call in calls:
+        call_stats = stats_response.get('result', [])
+        logger.info(f"Found {len(call_stats)} total calls from voximplant.statistic.get")
+
+        if call_stats:
+            logger.info(f"Full call stat (first): {call_stats[0]}")
+
+        for call in call_stats:
             duration = int(call.get('CALL_DURATION', 0))
-            portal_user_id = call.get('PORTAL_USER_ID')
+            user_id = str(call.get('PORTAL_USER_ID', ''))
 
-            if duration > 60 and portal_user_id:
-                user_id = str(portal_user_id)
+            if duration > 60:
                 if user_id in user_calls:
                     user_calls[user_id] += 1
+                    logger.info(f"Counted call for user {user_id} with duration {duration}s")
+                else:
+                    logger.warning(f"User {user_id} from call stats not in the initial user list.")
 
-        logger.info("Получена статистика звонков для %d пользователей", len(user_calls))
+        logger.info(f"Получена статистика звонков для {len(user_calls)} пользователей")
         return user_calls
 
     except Exception as e:
-        logger.error("Ошибка при получении статистики звонков: %s", str(e))
+        logger.error(f"Ошибка при получении статистики звонков: {e}")
         return user_calls
 
 
@@ -129,7 +138,7 @@ def index(request):
                 'id': user.get('ID'),
                 'name': full_name,
                 'managers': managers_names,
-                'calls_count': user_calls.get(user.get('ID'), 0)
+                'calls_count': user_calls.get(str(user.get('ID')), 0)
             })
 
         context = {
