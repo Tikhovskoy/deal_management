@@ -1,7 +1,9 @@
 from django.core.management.base import BaseCommand
-from datetime import datetime, timedelta
+from datetime import timedelta
+from django.utils import timezone
 import random
 import os
+import time
 
 
 class Command(BaseCommand):
@@ -39,7 +41,7 @@ class Command(BaseCommand):
 
         self.stdout.write(f'Генерация {count} тестовых звонков для пользователей: {", ".join(user_ids)}')
 
-        now = datetime.now()
+        now = timezone.now()
         successful = 0
         failed = 0
 
@@ -61,11 +63,8 @@ class Command(BaseCommand):
             params = {
                 'USER_ID': user_id,
                 'PHONE_NUMBER': phone_number,
-                'CALL_START_DATE': call_start.strftime('%Y-%m-%d %H:%M:%S'),
-                'DURATION': duration,
-                'TYPE': '2',
-                'CALL_ID': call_id,
-                'CRM_CREATE': '0',
+                'TYPE': '1',
+                'CRM_CREATE': '1',
                 'SHOW': '0'
             }
 
@@ -79,11 +78,66 @@ class Command(BaseCommand):
                 if response.status_code == 200:
                     data = response.json()
                     if 'result' in data:
-                        successful += 1
-                        self.stdout.write(
-                            f'[{i+1}/{count}] Создан звонок для пользователя {user_id}, '
-                            f'длительность: {duration}с'
+                        returned_call_id = data['result'].get('CALL_ID', call_id)
+                        self.stdout.write(f'  Зарегистрирован звонок с CALL_ID: {returned_call_id}')
+
+                        time.sleep(2)
+
+                        finish_params = {
+                            'CALL_ID': returned_call_id,
+                            'USER_ID': user_id,
+                            'DURATION': duration,
+                            'STATUS_CODE': '200',
+                            'ADD_TO_CHAT': 0
+                        }
+
+                        finish_response = requests.post(
+                            f'{webhook_url}telephony.externalcall.finish',
+                            json=finish_params,
+                            timeout=10
                         )
+
+                        if finish_response.status_code == 200:
+                            finish_data = finish_response.json()
+                            if 'result' in finish_data:
+                                crm_activity_id = finish_data['result'].get('CRM_ACTIVITY_ID')
+
+                                if crm_activity_id:
+                                    update_response = requests.post(
+                                        f'{webhook_url}crm.activity.update',
+                                        json={
+                                            'id': crm_activity_id,
+                                            'fields': {
+                                                'DESCRIPTION': f'Длительность: {duration} сек'
+                                            }
+                                        },
+                                        timeout=10
+                                    )
+
+                                    if update_response.status_code == 200:
+                                        self.stdout.write(f'  Обновлена активность {crm_activity_id} с длительностью {duration}с')
+
+                                successful += 1
+                                self.stdout.write(
+                                    f'[{i+1}/{count}] Создан и завершен звонок для пользователя {user_id}, '
+                                    f'длительность: {duration}с'
+                                )
+                            else:
+                                failed += 1
+                                self.stdout.write(
+                                    self.style.WARNING(
+                                        f'[{i+1}/{count}] Ошибка finish API: {finish_data.get("error_description", "Unknown")}'
+                                    )
+                                )
+                        else:
+                            failed += 1
+                            finish_error = finish_response.json() if finish_response.content else {}
+                            self.stdout.write(
+                                self.style.WARNING(
+                                    f'[{i+1}/{count}] Ошибка finish ({finish_response.status_code}): '
+                                    f'{finish_error.get("error_description", "Unknown")}'
+                                )
+                            )
                     else:
                         failed += 1
                         self.stdout.write(

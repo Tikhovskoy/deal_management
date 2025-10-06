@@ -2,7 +2,6 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from integration_utils.bitrix24.bitrix_user_auth.main_auth import main_auth
 from functools import wraps
-from django.conf import settings
 import logging
 import os
 
