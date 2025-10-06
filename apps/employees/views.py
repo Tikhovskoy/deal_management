@@ -72,25 +72,23 @@ def get_calls_statistics(bitrix_token, users):
         now = timezone.now()
         date_from = now - timedelta(hours=24)
 
-        stats_params = {
-            'filter': {
-                'START_DATE': date_from.isoformat(),
-                'END_DATE': now.isoformat(),
-                'TYPE': 'out',
-            },
-            'select': ['PORTAL_USER_ID', 'CALL_DURATION']
-        }
+        all_calls = bitrix_token.call_list_fast(
+            'voximplant.statistic.get',
+            params={
+                'filter': {
+                    'START_DATE': date_from.isoformat(),
+                    'END_DATE': now.isoformat(),
+                    'TYPE': 'out',
+                },
+                'select': ['PORTAL_USER_ID', 'CALL_DURATION']
+            }
+        )
 
-        logger.info(f"Fetching call statistics with params: {stats_params}")
-        stats_response = bitrix_token.call_api_method('voximplant.statistic.get', stats_params)
+        logger.info("Fetching all calls from the last 24 hours...")
 
-        call_stats = stats_response.get('result', [])
-        logger.info(f"Found {len(call_stats)} total calls from voximplant.statistic.get")
-
-        if call_stats:
-            logger.info(f"Full call stat (first): {call_stats[0]}")
-
-        for call in call_stats:
+        count = 0
+        for call in all_calls:
+            count += 1
             duration = int(call.get('CALL_DURATION', 0))
             user_id = str(call.get('PORTAL_USER_ID', ''))
 
@@ -101,6 +99,7 @@ def get_calls_statistics(bitrix_token, users):
                 else:
                     logger.warning(f"User {user_id} from call stats not in the initial user list.")
 
+        logger.info(f"Processed {count} total calls from voximplant.statistic.get")
         logger.info(f"Получена статистика звонков для {len(user_calls)} пользователей")
         return user_calls
 
@@ -112,15 +111,26 @@ def get_calls_statistics(bitrix_token, users):
 @smart_auth
 def index(request):
     try:
-        users_response = request.bitrix_user_token.call_api_method('user.get', {
-            'filter': {'ACTIVE': True},
-            'select': ['ID', 'NAME', 'LAST_NAME', 'SECOND_NAME', 'UF_DEPARTMENT']
-        })
+        methods = [
+            (
+                'users',
+                'user.get',
+                {
+                    'filter': {'ACTIVE': True},
+                    'select': ['ID', 'NAME', 'LAST_NAME', 'SECOND_NAME', 'UF_DEPARTMENT']
+                }
+            ),
+            (
+                'departments',
+                'department.get',
+                {}
+            )
+        ]
 
-        users = users_response.get('result', [])
+        batch_result = request.bitrix_user_token.batch_api_call(methods=methods)
 
-        departments_response = request.bitrix_user_token.call_api_method('department.get', {})
-        departments = departments_response.get('result', [])
+        users = batch_result.get('users', {}).get('result', [])
+        departments = batch_result.get('departments', {}).get('result', [])
 
         department_heads = get_department_heads(departments)
         users_by_id = {int(user['ID']): user for user in users}
@@ -145,7 +155,7 @@ def index(request):
             'employees': employees_data
         }
 
-        logger.info("Получены данные о сотрудниках и иерархии")
+        logger.info("Получены данные о сотрудниках и иерархии (batch)")
         return render(request, 'employees/index.html', context)
 
     except Exception as e:
