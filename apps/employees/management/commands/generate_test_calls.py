@@ -1,9 +1,10 @@
-from django.core.management.base import BaseCommand
-from datetime import timedelta
-from django.utils import timezone
-import random
 import os
+import random
 import time
+from datetime import timedelta
+
+from django.core.management.base import BaseCommand
+from django.utils import timezone
 
 
 class Command(BaseCommand):

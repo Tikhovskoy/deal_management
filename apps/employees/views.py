@@ -1,10 +1,12 @@
-from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-from integration_utils.bitrix24.bitrix_user_auth.main_auth import main_auth
-from django.utils import timezone
-from functools import wraps
-from datetime import timedelta
 import logging
+from datetime import timedelta
+from functools import wraps
+
+from django.shortcuts import render
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+
+from integration_utils.bitrix24.bitrix_user_auth.main_auth import main_auth
 
 logger = logging.getLogger(__name__)
 

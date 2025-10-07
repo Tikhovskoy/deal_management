@@ -1,16 +1,19 @@
-from django.shortcuts import render, get_object_or_404
-from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse
-from integration_utils.bitrix24.bitrix_user_auth.main_auth import main_auth
-from functools import wraps
-from .models import ProductQR
-import qrcode
-from io import BytesIO
 import base64
-from django.conf import settings
 import logging
-import requests
 import os
+from functools import wraps
+from io import BytesIO
+
+import qrcode
+import requests
+from django.conf import settings
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, render
+from django.views.decorators.csrf import csrf_exempt
+
+from integration_utils.bitrix24.bitrix_user_auth.main_auth import main_auth
+
+from .models import ProductQR
 
 logger = logging.getLogger(__name__)
 

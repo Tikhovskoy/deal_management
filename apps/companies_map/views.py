@@ -1,9 +1,11 @@
 import json
+import logging
 import os
+
 import requests
 from django.shortcuts import render
+
 from ..employees.views import smart_auth
-import logging
 
 logger = logging.getLogger(__name__)
 
