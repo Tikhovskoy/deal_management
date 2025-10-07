@@ -1,7 +1,9 @@
+from functools import wraps
+
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+
 from integration_utils.bitrix24.bitrix_user_auth.main_auth import main_auth
-from functools import wraps
 
 
 def smart_auth(func):
@@ -55,6 +57,13 @@ def index(request):
             "icon": "🗺️",
             "url": "/map/",
             "color": "#fd7e14",
+        },
+        {
+            "title": "Менеджер контактов",
+            "description": "Импорт и экспорт контактов из CSV/XLSX",
+            "icon": "📇",
+            "url": "/contacts/",
+            "color": "#17a2b8",
         },
     ]
 

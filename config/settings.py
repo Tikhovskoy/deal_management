@@ -1,6 +1,8 @@
-from pathlib import Path
 import os
+from pathlib import Path
+
 from dotenv import load_dotenv
+
 from integration_utils.bitrix24.local_settings_class import LocalSettingsClass
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,6 +34,7 @@ INSTALLED_APPS = [
     "apps.product_qr",
     "apps.employees",
     "apps.companies_map",
+    "apps.contact_manager",
 ]
 
 MIDDLEWARE = [

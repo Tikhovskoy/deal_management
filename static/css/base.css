@@ -164,6 +164,11 @@ tr:hover {
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s;
+    text-decoration: none !important;
+}
+
+.btn:hover {
+    text-decoration: none !important;
 }
 
 .btn-primary {

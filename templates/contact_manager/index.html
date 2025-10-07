@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Менеджер контактов{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {% include 'includes/page_header.html' with title='Менеджер контактов' show_back_button=True %}
+
+    <div class="row mt-4">
+        <div class="col-md-6 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Импорт контактов</h5>
+                    <p class="card-text">Загрузите CSV или XLSX файл для создания или обновления контактов на портале.
+                    </p>
+                    <a href="{% url 'contact_manager:import_contacts' %}" class="btn btn-primary">Перейти к импорту</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">Экспорт контактов</h5>
+                    <p class="card-text">Выгрузите контакты с портала в файл формата CSV или XLSX.</p>
+                    <a href="{% url 'contact_manager:export_contacts' %}" class="btn btn-secondary">Перейти к
+                        экспорту</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

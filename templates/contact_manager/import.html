@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Импорт контактов{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {% include 'includes/page_header.html' with title='Импорт контактов' show_back_button=True %}
+
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    {% if success_count is not None %}
+    <div class="alert alert-info">
+        <h5>Отчет по импорту:</h5>
+        <p><strong>Успешно обработано:</strong> {{ success_count }}</p>
+        <p><strong>Пропущено (дубликаты):</strong> {{ skipped_count }}</p>
+        <p><strong>Ошибок:</strong> {{ error_count }}</p>
+    </div>
+    {% endif %}
+
+    {% if success_details %}
+    <div class="card mt-3">
+        <div class="card-header bg-success text-white">Успешно импортированные контакты</div>
+        <ul class="list-group list-group-flush">
+            {% for detail in success_details %}
+            <li class="list-group-item">{{ detail }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if skipped_details %}
+    <div class="card mt-3">
+        <div class="card-header bg-warning text-dark">Пропущенные контакты (дубликаты)</div>
+        <ul class="list-group list-group-flush">
+            {% for detail in skipped_details %}
+            <li class="list-group-item">{{ detail }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if error_details %}
+    <div class="card mt-3">
+        <div class="card-header bg-danger text-white">Ошибки импорта</div>
+        <ul class="list-group list-group-flush">
+            {% for detail in error_details %}
+            <li class="list-group-item">{{ detail }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card mt-4">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="fileUpload">Файл для импорта:</label>
+                            <input type="file" name="file" class="form-control-file" id="fileUpload"
+                                accept=".csv, .xlsx" required>
+                        </div>
+
+                        <div class="d-flex mt-3">
+                            <button type="submit" class="btn btn-primary me-2">Загрузить и импортировать</button>
+                            <a href="{% url 'contact_manager:index' %}" class="btn btn-secondary">Назад</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
