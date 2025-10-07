@@ -1,8 +1,5 @@
 import logging
 
-logging.basicConfig(
-    level=logging.WARNING,
-    format='%(message)s'
-)
+logging.basicConfig(level=logging.WARNING, format="%(message)s")
 
-ilogger = logging.getLogger('integration_utils')
+ilogger = logging.getLogger("integration_utils")
