@@ -1,7 +1,6 @@
 import base64
 import logging
 import os
-from functools import wraps
 from io import BytesIO
 
 import qrcode
@@ -9,9 +8,8 @@ import requests
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
-from django.views.decorators.csrf import csrf_exempt
 
-from integration_utils.bitrix24.bitrix_user_auth.main_auth import main_auth
+from apps.core.decorators import smart_auth
 
 from .models import ProductQR
 
@@ -39,24 +37,6 @@ def extract_product_image_url(product):
                     return f"https://{domain}{file_data['downloadUrl']}"
 
     return None
-
-
-def smart_auth(func):
-    @csrf_exempt
-    @wraps(func)
-    def wrapper(request, *args, **kwargs):
-        has_auth_id = request.POST.get("AUTH_ID") or request.GET.get("AUTH_ID")
-
-        if has_auth_id:
-            return main_auth(on_start=True, set_cookie=True)(func)(
-                request, *args, **kwargs
-            )
-        else:
-            return main_auth(on_cookies=True, set_cookie=True)(func)(
-                request, *args, **kwargs
-            )
-
-    return wrapper
 
 
 def call_bitrix_webhook(method, params=None):

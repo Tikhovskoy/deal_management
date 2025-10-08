@@ -1,35 +1,11 @@
 import logging
-import os
-from functools import wraps
 
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 
-from integration_utils.bitrix24.bitrix_user_auth.main_auth import main_auth
+from apps.core.decorators import smart_auth
 
 logger = logging.getLogger(__name__)
-
-CUSTOM_FIELD_NAME = os.getenv("CUSTOM_FIELD_NAME", "UF_CRM_1759500436")
-DEFAULT_STAGE = os.getenv("DEFAULT_STAGE", "NEW")
-DEFAULT_CURRENCY = os.getenv("DEFAULT_CURRENCY", "RUB")
-
-
-def smart_auth(func):
-    @csrf_exempt
-    @wraps(func)
-    def wrapper(request, *args, **kwargs):
-        has_auth_id = request.POST.get("AUTH_ID") or request.GET.get("AUTH_ID")
-
-        if has_auth_id:
-            return main_auth(on_start=True, set_cookie=True)(func)(
-                request, *args, **kwargs
-            )
-        else:
-            return main_auth(on_cookies=True, set_cookie=True)(func)(
-                request, *args, **kwargs
-            )
-
-    return wrapper
 
 
 @smart_auth
@@ -40,7 +16,7 @@ def index(request):
     try:
         if request.method == "POST":
             title = request.POST.get("title", "").strip()
-            custom_field = request.POST.get(CUSTOM_FIELD_NAME, "").strip()
+            custom_field = request.POST.get(settings.CUSTOM_FIELD_NAME, "").strip()
             opportunity = request.POST.get("opportunity", "").strip()
 
             logger.info(
@@ -54,9 +30,9 @@ def index(request):
             else:
                 fields = {
                     "TITLE": title,
-                    "STAGE_ID": DEFAULT_STAGE,
-                    CUSTOM_FIELD_NAME: custom_field,
-                    "CURRENCY_ID": DEFAULT_CURRENCY,
+                    "STAGE_ID": settings.DEFAULT_STAGE,
+                    settings.CUSTOM_FIELD_NAME: custom_field,
+                    "CURRENCY_ID": settings.DEFAULT_CURRENCY,
                 }
 
                 if opportunity:
@@ -105,16 +81,16 @@ def index(request):
             )
             if "result" in fields_response:
                 all_fields = fields_response["result"]
-                custom_field_data = all_fields.get(CUSTOM_FIELD_NAME)
+                custom_field_data = all_fields.get(settings.CUSTOM_FIELD_NAME)
                 if custom_field_data and custom_field_data.get("items"):
                     lead_source_options = custom_field_data["items"]
                 else:
                     logger.warning(
-                        f"Custom field {CUSTOM_FIELD_NAME} not found or has no items."
+                        f"Custom field {settings.CUSTOM_FIELD_NAME} not found or has no items."
                     )
                     if not error_message:
                         error_message = (
-                            f"Не удалось найти кастомное поле {CUSTOM_FIELD_NAME}."
+                            f"Не удалось найти кастомное поле {settings.CUSTOM_FIELD_NAME}."
                         )
             else:
                 logger.error(
@@ -133,7 +109,7 @@ def index(request):
             "deals": deals,
             "success_message": success_message,
             "error_message": error_message,
-            "custom_field_name": CUSTOM_FIELD_NAME,
+            "custom_field_name": settings.CUSTOM_FIELD_NAME,
             "lead_source_options": lead_source_options,
         }
 

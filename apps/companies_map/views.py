@@ -5,7 +5,7 @@ import os
 import requests
 from django.shortcuts import render
 
-from ..employees.views import smart_auth
+from apps.core.decorators import smart_auth
 
 logger = logging.getLogger(__name__)
 
