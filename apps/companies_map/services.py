@@ -81,7 +81,6 @@ class CompaniesMapService:
         return companies_data, yandex_api_key
 
     def _format_address(self, address_data):
-        """Собирает полный адрес из структурированных данных."""
         parts = [
             address_data.get("COUNTRY"),
             address_data.get("PROVINCE"),
