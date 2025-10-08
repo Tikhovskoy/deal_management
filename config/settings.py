@@ -18,6 +18,10 @@ DEBUG = os.getenv("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
+CUSTOM_FIELD_NAME = os.getenv("CUSTOM_FIELD_NAME", "UF_CRM_1759500436")
+DEFAULT_STAGE = os.getenv("DEFAULT_STAGE", "NEW")
+DEFAULT_CURRENCY = os.getenv("DEFAULT_CURRENCY", "RUB")
+
 CSRF_TRUSTED_ORIGINS = []
 if os.getenv("DOMAIN"):
     CSRF_TRUSTED_ORIGINS.append(f"https://{os.getenv('DOMAIN')}")
@@ -155,7 +159,3 @@ LOGGING = {
         },
     },
 }
-
-CUSTOM_FIELD_NAME = os.getenv("CUSTOM_FIELD_NAME", "UF_CRM_1759500436")
-DEFAULT_STAGE = os.getenv("DEFAULT_STAGE", "NEW")
-DEFAULT_CURRENCY = os.getenv("DEFAULT_CURRENCY", "RUB")
