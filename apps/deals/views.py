@@ -85,12 +85,12 @@ def index(request):
                 if custom_field_data and custom_field_data.get("items"):
                     lead_source_options = custom_field_data["items"]
                 else:
-                    logger.warning(
+                    logger.error(
                         f"Custom field {settings.CUSTOM_FIELD_NAME} not found or has no items."
                     )
                     if not error_message:
                         error_message = (
-                            f"Не удалось найти кастомное поле {settings.CUSTOM_FIELD_NAME}."
+                            f"Системное поле '{settings.CUSTOM_FIELD_NAME}' не найдено в Bitrix24. Обратитесь к администратору."
                         )
             else:
                 logger.error(
