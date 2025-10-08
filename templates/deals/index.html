@@ -47,7 +47,7 @@
         {% include 'includes/alert.html' with alert_type='error' message=error_message %}
     {% endif %}
 
-    <form method="POST" action="?DOMAIN={{ request.GET.DOMAIN }}&PROTOCOL={{ request.GET.PROTOCOL }}&LANG={{ request.GET.LANG }}&APP_SID={{ request.GET.APP_SID }}">
+    <form method="POST" action="{% url 'deals:index' %}?DOMAIN={{ request.GET.DOMAIN }}&PROTOCOL={{ request.GET.PROTOCOL }}&LANG={{ request.GET.LANG }}&APP_SID={{ request.GET.APP_SID }}">
         {% csrf_token %}
 
         <div class="form-group">
